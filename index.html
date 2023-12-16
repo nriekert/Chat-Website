@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Chat</title>
+</head>
+<body>
+  <div id="chat">
+    <ul id="messages"></ul>
+    <input id="messageInput" autocomplete="off" /><button onclick="sendMessage()">Send</button>
+  </div>
+  <div id="users">
+    <h3>Users in the group:</h3>
+    <ul id="userList"></ul>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    socket.on('message', (message) => {
+      const messages = document.getElementById('messages');
+      const li = document.createElement('li');
+      li.appendChild(document.createTextNode(`${message.username}: ${message.text}`));
+      messages.appendChild(li);
+    });
+
+    socket.on('updateUsers', (users) => {
+      const userList = document.getElementById('userList');
+      userList.innerHTML = '';
+      users.forEach((user) => {
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode(user));
+        userList.appendChild(li);
+      });
+    });
+
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value;
+      if (message.trim() !== '') {
+        socket.emit('message', message);
+        messageInput.value = '';
+      }
+    }
+
+    const username = prompt('Enter your username:');
+    const group = prompt('Enter the group name:');
+
+    socket.emit('join', { username, group });
+  </script>
+</body>
+</html>
